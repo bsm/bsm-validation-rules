@@ -1,7 +1,7 @@
 {
   "name": "bsm-validation-rules",
-  "version": "0.1.0",
-  "description": "Validation rules builder",
+  "version": "0.1.1",
+  "description": "Validation rule builder",
   "repository": "https://github.com/bsm/validation-rules-js.git",
   "author": "Dimitrij Denissenko",
   "license": "Apache-2.0",

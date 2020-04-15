@@ -35,7 +35,7 @@ In Vue/Vuetify:
 ```html
 <template>
   <form>
-    <v-text-field label="Title" v-model="item.title" :rules="rules.title" />
+    <v-text-field label="Email" v-model="item.email" :rules="rules.email" />
   </form>
 </template>
 
@@ -43,7 +43,7 @@ In Vue/Vuetify:
 import vrb from 'bsm-validation-rules';
 
 const rules = {
-  title: [
+  email: [
     vrb.presence(),
     vrb.typeOf('string'),
     vrb.format(/\S+@\S+\.\S+/),
@@ -51,6 +51,9 @@ const rules = {
 };
 
 export default {
-  data: () => ({ rules }),
+  data: () => ({
+    rules,
+    item: {},
+  }),
 }
 ```
