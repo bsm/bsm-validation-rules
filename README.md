@@ -5,25 +5,26 @@ Validation rule builder, written in TypeScript.
 ## Usage
 
 ```javascript
-import rules from 'bsm-validation-rules';
+import vrb from 'bsm-validation-rules';
 
 const percentage = [
-  rules.typeOf('number'),
-  rules.numericality({ min: 0, max: 100 }),
+  vrb.typeOf('number'),
+  vrb.numericality({ min: 0, max: 100 }),
 ];
 
 export const taskRules = {
   title: [
-    rules.presence(),
-    rules.typeOf('string'),
+    vrb.presence(),
+    vrb.typeOf('string'),
+    vrb.length({ max: 50 }),
   ],
   status: [
-    rules.presence(),
-    rules.typeOf('string'),
-    rules.inclusion(['pending', 'complete']),
+    vrb.presence(),
+    vrb.typeOf('string'),
+    vrb.inclusion(['pending', 'complete']),
   ],
   progress: [
-    rules.presence(),
+    vrb.presence(),
     ...percentage,
   ],
 });
@@ -39,13 +40,13 @@ In Vue/Vuetify:
 </template>
 
 <script>
-import rules from 'bsm-validation-rules';
+import vrb from 'bsm-validation-rules';
 
 const rules = {
   title: [
-    rules.presence(),
-    rules.typeOf('string'),
-    rules.format(/\S+@\S+\.\S+/),
+    vrb.presence(),
+    vrb.typeOf('string'),
+    vrb.format(/\S+@\S+\.\S+/),
   ],
 };
 
