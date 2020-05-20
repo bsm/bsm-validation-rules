@@ -46,14 +46,22 @@ function isBlank(v: Primitive): boolean {
   return true;
 }
 
+const HANDLEBARS = /\{\{(\w+)\}\}/g;
+
+function interpolate(s: string, subs: { [key: string]: string }): string {
+  return s.replace(HANDLEBARS, (_: string, m: string) => {
+    return String(subs[m]);
+  });
+}
+
 // --------------------------------------------------------------------
 
 export type Rule = (v: Primitive) => string | true;
 
-export function presence(): Rule {
+export function presence(message = "can't be blank"): Rule {
   return (v: Primitive): string | true => {
     if (isBlank(v)) {
-      return "can't be blank";
+      return message;
     }
     return true;
   };
@@ -92,32 +100,34 @@ export function length(opts: { min?: number; max?: number; is?: number }): Rule 
   };
 }
 
-export function inclusion(values: string[]): Rule {
+export function inclusion(values: string[], message = 'must be one of: {{values}}'): Rule {
   values.sort();
 
   return (v: Primitive): string | true => {
     if (isDefined(v) && values.indexOf(v as never) < 0) {
-      return `must be one of: ${values.join(', ')}`;
+      return interpolate(message, { values: values.join(', ') });
     }
     return true;
   };
 }
 
-export function format(pattern: RegExp): Rule {
+export function format(pattern: RegExp, message = 'is invalid'): Rule {
   return (v: Primitive): string | true => {
     if (isString(v) && !pattern.test(v as string)) {
-      return 'is invalid';
+      return message;
     }
     return true;
   };
 }
 
-export function typeOf(type: typeName): Rule {
+export function typeOf(type: typeName, message?: string): Rule {
   return (v: Primitive): string | true => {
     if (!isDefined(v) || isType(v, type)) {
       return true;
     }
-    if (type === 'integer') {
+    if (message != null) {
+      return message;
+    } else if (type === 'integer') {
       return `is not an ${type}`;
     }
     return `is not a ${type}`;
