@@ -122,7 +122,7 @@ export function format(pattern: RegExp, message = 'is invalid'): Rule {
 
 export function typeOf(type: typeName, message?: string): Rule {
   return (v: Primitive): string | true => {
-    if (!isDefined(v) || isType(v, type)) {
+    if (!isDefined(v) || v === '' || isType(v, type)) {
       return true;
     }
     if (message != null) {

@@ -156,6 +156,7 @@ describe('typeOf', () => {
 
     expect(subject(undefined)).toBe(true);
     expect(subject(null)).toBe(true);
+    expect(subject('')).toBe(true);
     expect(subject(0)).toBe(true);
     expect(subject(1)).toBe(true);
     expect(subject(-1)).toBe(true);

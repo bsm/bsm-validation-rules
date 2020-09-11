@@ -1,6 +1,6 @@
 {
   "name": "bsm-validation-rules",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Validation rule builder",
   "repository": "https://github.com/bsm/validation-rules-js.git",
   "author": "Dimitrij Denissenko",
@@ -22,17 +22,17 @@
     "postversion": "git push && git push --tags"
   },
   "devDependencies": {
-    "@types/jest": "^25.2.3",
-    "@types/json-schema": "^7.0.4",
+    "@types/jest": "^26.0.13",
+    "@types/json-schema": "^7.0.6",
     "@types/node": "*",
-    "@types/prettier": "^2.0.0",
-    "@typescript-eslint/eslint-plugin": "^2.34.0",
-    "@typescript-eslint/parser": "^2.34.0",
-    "eslint": "^7.0.0",
+    "@types/prettier": "^2.1.0",
+    "@typescript-eslint/eslint-plugin": "^4.1.0",
+    "@typescript-eslint/parser": "^4.1.0",
+    "eslint": "^7.8.1",
     "eslint-config-prettier": "^6.11.0",
-    "jest": "^26.0.0",
-    "prettier": "^2.0.5",
-    "ts-jest": "^26.0.0",
-    "typescript": "^3.9.3"
+    "jest": "^26.4.2",
+    "prettier": "^2.1.1",
+    "ts-jest": "^26.3.0",
+    "typescript": "^4.0.2"
   }
 }
