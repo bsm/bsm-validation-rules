@@ -1,4 +1,14 @@
-import { presence, numericality, length, inclusion, format, typeOf, Rule } from './rules';
+import {
+  presence,
+  numericality,
+  length,
+  inclusion,
+  format,
+  typeOf,
+  every,
+  or,
+  Rule,
+} from './rules';
 
 describe('presence', () => {
   let subject: Rule;
@@ -13,12 +23,14 @@ describe('presence', () => {
     expect(subject('')).toEqual("can't be blank");
     expect(subject(' ')).toEqual("can't be blank");
     expect(subject('\t')).toEqual("can't be blank");
+    expect(subject([])).toEqual("can't be blank");
 
     expect(subject('foo')).toBe(true);
     expect(subject(123)).toBe(true);
     expect(subject(0)).toBe(true);
     expect(subject(true)).toBe(true);
     expect(subject(false)).toBe(true);
+    expect(subject([null])).toBe(true);
   });
 });
 
@@ -164,5 +176,48 @@ describe('typeOf', () => {
     expect(subject('foo')).toEqual(`is not an integer`);
     expect(subject(true)).toEqual(`is not an integer`);
     expect(subject(false)).toEqual(`is not an integer`);
+  });
+});
+
+describe('every', () => {
+  let subject: Rule;
+
+  beforeEach(() => {
+    subject = every([presence(), numericality({ min: 3 })]);
+  });
+
+  it('should validate', () => {
+    expect(subject(undefined)).toBe(true);
+    expect(subject(null)).toBe(true);
+    expect(subject(0)).toBe(true);
+    expect(subject('foo')).toBe(true);
+    expect(subject([])).toBe(true);
+    expect(subject(['foo'])).toBe(true);
+    expect(subject(['foo', 5])).toBe(true);
+
+    expect(subject([null])).toEqual(`can't be blank`);
+    expect(subject([2])).toEqual(`must be greater or equal 3`);
+  });
+});
+
+describe('or', () => {
+  let subject: Rule;
+
+  beforeEach(() => {
+    subject = or([[typeOf('string'), length({ min: 3 })], typeOf('boolean')]);
+  });
+
+  it('should validate', () => {
+    expect(subject(undefined)).toBe(true);
+    expect(subject(null)).toBe(true);
+    expect(subject('foo')).toBe(true);
+    expect(subject(true)).toBe(true);
+    expect(subject(false)).toBe(true);
+
+    expect(subject(0)).toEqual('is invalid: is not a string, is not a boolean');
+    expect(subject([])).toEqual('is invalid: is not a string, is not a boolean');
+    expect(subject('zz')).toEqual(
+      'is invalid: is too short (minimum is 3 characters), is not a boolean',
+    );
   });
 });
