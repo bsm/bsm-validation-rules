@@ -183,7 +183,7 @@ describe('every', () => {
   let subject: Rule;
 
   beforeEach(() => {
-    subject = every(presence(), numericality({ min: 3 }));
+    subject = every([presence(), numericality({ min: 3 })]);
   });
 
   it('should validate', () => {
