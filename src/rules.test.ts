@@ -204,7 +204,7 @@ describe('or', () => {
   let subject: Rule;
 
   beforeEach(() => {
-    subject = or([typeOf('string'), typeOf('boolean')]);
+    subject = or([[typeOf('string'), length({ min: 3 })], typeOf('boolean')]);
   });
 
   it('should validate', () => {
@@ -214,7 +214,10 @@ describe('or', () => {
     expect(subject(true)).toBe(true);
     expect(subject(false)).toBe(true);
 
-    expect(subject(0)).toEqual('matches neither: is not a string, is not a boolean');
-    expect(subject([])).toBe('matches neither: is not a string, is not a boolean');
+    expect(subject(0)).toEqual('is invalid: is not a string, is not a boolean');
+    expect(subject([])).toEqual('is invalid: is not a string, is not a boolean');
+    expect(subject('zz')).toEqual(
+      'is invalid: is too short (minimum is 3 characters), is not a boolean',
+    );
   });
 });

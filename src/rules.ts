@@ -74,6 +74,8 @@ function interpolate(s: string, subs: { [key: string]: string }): string {
 
 export type Rule = (v: Value) => string | true;
 
+type RuleSet = Rule | Rule[];
+
 export function presence(message = "can't be blank"): Rule {
   return (v: Value): string | true => {
     if (isBlank(v)) {
@@ -164,11 +166,11 @@ export function every(rules: Rule[], message?: string): Rule {
       return true;
     }
 
-    for (const ent of v) {
+    for (const entry of v) {
       for (const rule of rules) {
-        const msg = rule(ent);
-        if (msg !== true) {
-          return message != null ? message : msg;
+        const res = rule(entry);
+        if (res !== true) {
+          return message != null ? message : res;
         }
       }
     }
@@ -176,20 +178,31 @@ export function every(rules: Rule[], message?: string): Rule {
   };
 }
 
-export function or(rules: Rule[], message?: string): Rule {
+export function or(rules: RuleSet[], message?: string): Rule {
   return (v: Value): string | true => {
     if (rules.length == 0) {
       return true;
     }
 
     const summary: string[] = [];
-    for (const rule of rules) {
-      const res = rule(v);
+    for (let ruleSet of rules) {
+      if (!Array.isArray(ruleSet)) {
+        ruleSet = [ruleSet];
+      }
+
+      let res: string | true = true;
+      for (const rule of ruleSet) {
+        res = rule(v);
+        if (res !== true) {
+          break;
+        }
+      }
+
       if (res === true) {
         return true;
       }
       summary.push(res);
     }
-    return message != null ? message : 'matches neither: ' + summary.join(', ');
+    return message != null ? message : 'is invalid: ' + summary.join(', ');
   };
 }
