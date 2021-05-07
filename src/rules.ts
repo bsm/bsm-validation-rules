@@ -182,7 +182,7 @@ export function or(rules: Rule[], message?: string): Rule {
       return true;
     }
 
-    let summary: string[] = [];
+    const summary: string[] = [];
     for (const rule of rules) {
       const res = rule(v);
       if (res === true) {
