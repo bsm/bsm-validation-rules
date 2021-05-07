@@ -1,34 +1,34 @@
-type Primitive = string | number | boolean | null | undefined;
+type typeName = 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'object';
 
-type Value = Primitive | Primitive[];
-
-type typeName = 'string' | 'number' | 'integer' | 'boolean' | 'array';
-
-function isDefined(v: Value): boolean {
+function isDefined(v: unknown): boolean {
   return v !== null && v !== undefined;
 }
 
-function isString(v: Value): v is string {
+function isString(v: unknown): v is string {
   return typeof v === 'string';
 }
 
-function isNumber(v: Value): v is number {
+function isNumber(v: unknown): v is number {
   return typeof v === 'number' && !isNaN(v);
 }
 
-function isInteger(v: Value): v is number {
+function isInteger(v: unknown): v is number {
   return isNumber(v) && (v as number) % 1 === 0;
 }
 
-function isBool(v: Value): v is boolean {
+function isBool(v: unknown): v is boolean {
   return typeof v === 'boolean';
 }
 
-function isArray(v: Value): v is Primitive[] {
+function isArray(v: unknown): v is unknown[] {
   return Array.isArray(v);
 }
 
-function isType(v: Value, t: typeName): boolean {
+function isObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && !isArray(v);
+}
+
+function isType(v: unknown, t: typeName): boolean {
   switch (t) {
     case 'string':
       return isString(v);
@@ -40,12 +40,14 @@ function isType(v: Value, t: typeName): boolean {
       return isBool(v);
     case 'array':
       return isArray(v);
+    case 'object':
+      return isObject(v);
   }
 }
 
 const EMPTY_STRING_REGEXP = /^\s*$/;
 
-function isBlank(v: Value): boolean {
+function isBlank(v: unknown): boolean {
   if (!isDefined(v)) {
     return true;
   }
@@ -57,6 +59,9 @@ function isBlank(v: Value): boolean {
   }
   if (isArray(v)) {
     return v.length === 0;
+  }
+  if (isObject(v)) {
+    return Object.keys(v).length === 0;
   }
 
   return true;
@@ -72,12 +77,26 @@ function interpolate(s: string, subs: { [key: string]: string }): string {
 
 // --------------------------------------------------------------------
 
-export type Rule = (v: Value) => string | true;
+export type Rule = (v: unknown) => string | true;
 
-type RuleSet = Rule | Rule[];
+function multi(rule: Rule | Rule[]): Rule {
+  if (!isArray(rule)) {
+    return rule;
+  }
+
+  return (v: unknown): string | true => {
+    for (const r of rule) {
+      const res = r(v);
+      if (res !== true) {
+        return res;
+      }
+    }
+    return true;
+  };
+}
 
 export function presence(message = "can't be blank"): Rule {
-  return (v: Value): string | true => {
+  return (v: unknown): string | true => {
     if (isBlank(v)) {
       return message;
     }
@@ -86,7 +105,7 @@ export function presence(message = "can't be blank"): Rule {
 }
 
 export function numericality(opts: { min?: number; max?: number }): Rule {
-  return (v: Value): string | true => {
+  return (v: unknown): string | true => {
     if (!isDefined(v) || !isNumber(v)) return true;
 
     const num = v as number;
@@ -101,7 +120,7 @@ export function numericality(opts: { min?: number; max?: number }): Rule {
 }
 
 export function length(opts: { min?: number; max?: number; is?: number }): Rule {
-  return (v: Value): string | true => {
+  return (v: unknown): string | true => {
     if (!isDefined(v)) return true;
 
     let length: number | undefined;
@@ -126,11 +145,11 @@ export function length(opts: { min?: number; max?: number; is?: number }): Rule 
   };
 }
 
-export function inclusion(values: Primitive[], message = 'must be one of: {{values}}'): Rule {
+export function inclusion(values: unknown[], message = 'must be one of: {{values}}'): Rule {
   values.sort();
 
-  return (v: Value): string | true => {
-    if (isDefined(v) && values.indexOf(v as Primitive) < 0) {
+  return (v: unknown): string | true => {
+    if (isDefined(v) && values.indexOf(v) < 0) {
       return interpolate(message, { values: values.join(', ') });
     }
     return true;
@@ -138,7 +157,7 @@ export function inclusion(values: Primitive[], message = 'must be one of: {{valu
 }
 
 export function format(pattern: RegExp, message = 'is invalid'): Rule {
-  return (v: Value): string | true => {
+  return (v: unknown): string | true => {
     if (isString(v) && !pattern.test(v as string)) {
       return message;
     }
@@ -147,13 +166,13 @@ export function format(pattern: RegExp, message = 'is invalid'): Rule {
 }
 
 export function typeOf(type: typeName, message?: string): Rule {
-  return (v: Value): string | true => {
+  return (v: unknown): string | true => {
     if (!isDefined(v) || v === '' || isType(v, type)) {
       return true;
     }
     if (message != null) {
       return message;
-    } else if (type === 'integer' || type === 'array') {
+    } else if (type === 'integer' || type === 'array' || type === 'object') {
       return `is not an ${type}`;
     }
     return `is not a ${type}`;
@@ -161,7 +180,7 @@ export function typeOf(type: typeName, message?: string): Rule {
 }
 
 export function every(rules: Rule[], message?: string): Rule {
-  return (v: Value): string | true => {
+  return (v: unknown): string | true => {
     if (!isDefined(v) || !isArray(v)) {
       return true;
     }
@@ -178,31 +197,42 @@ export function every(rules: Rule[], message?: string): Rule {
   };
 }
 
-export function or(rules: RuleSet[], message?: string): Rule {
-  return (v: Value): string | true => {
+export function or(rules: (Rule | Rule[])[], message?: string): Rule {
+  return (v: unknown): string | true => {
     if (rules.length == 0) {
       return true;
     }
 
     const summary: string[] = [];
-    for (let ruleSet of rules) {
-      if (!Array.isArray(ruleSet)) {
-        ruleSet = [ruleSet];
-      }
-
-      let res: string | true = true;
-      for (const rule of ruleSet) {
-        res = rule(v);
-        if (res !== true) {
-          break;
-        }
-      }
-
+    for (const rs of rules) {
+      const res = multi(rs)(v);
       if (res === true) {
         return true;
       }
       summary.push(res);
     }
     return message != null ? message : 'is invalid: ' + summary.join(', ');
+  };
+}
+
+export function dig(field: string | string[], rule: Rule | Rule[]): Rule {
+  const fields = isArray(field) ? field : [field];
+  const rules = multi(rule);
+
+  return (v: unknown): string | true => {
+    if (!isDefined(v) || !isObject(v)) {
+      return true;
+    }
+
+    let fv: unknown | undefined = v;
+    for (const field of fields) {
+      if (fv != null && isObject(fv) && field in fv) {
+        fv = fv[field];
+      } else {
+        fv = undefined;
+        break;
+      }
+    }
+    return rules(fv);
   };
 }
