@@ -1,0 +1,33 @@
+name: Test
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+env:
+  node_version: 14.x
+  pnpm_version: '6'
+jobs:
+  javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-build-pnpm-store-${{ env.node_version }}-${{ env.pnpm_version }}-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-pnpm-store-${{ env.node_version }}-${{ env.pnpm_version }}-
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.node_version }}
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.pnpm_version }}
+          run_install: true
+      - run: |
+          pnpm run lint
+          pnpm run test
+          pnpm run build

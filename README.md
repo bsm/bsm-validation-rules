@@ -12,6 +12,13 @@ const percentage = [
   vrb.numericality({ min: 0, max: 100 }),
 ];
 
+const tag = [
+  vrb.presence(),
+  vrb.typeOf('string'),
+  vrb.length({ max: 20 }),
+  vrb.format(/^[A-Za-z0-9]+(\-[A-Za-z0-9])*$/),
+];
+
 export const taskRules = {
   title: [
     vrb.presence(),
@@ -27,6 +34,10 @@ export const taskRules = {
     vrb.presence(),
     ...percentage,
   ],
+  tags: [
+    vrb.typeOf('array'),
+    vrb.every([tag]),
+  ]
 });
 ```
 
