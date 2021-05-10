@@ -75,11 +75,7 @@ function interpolate(s: string, subs: { [key: string]: string }): string {
   });
 }
 
-// --------------------------------------------------------------------
-
-export type Rule = (v: unknown) => string | true;
-
-function multi(rule: Rule | Rule[]): Rule {
+function conjunctionOf(rule: Rule | Rule[]): Rule {
   if (!isArray(rule)) {
     return rule;
   }
@@ -94,6 +90,10 @@ function multi(rule: Rule | Rule[]): Rule {
     return true;
   };
 }
+
+// --------------------------------------------------------------------
+
+export type Rule = (v: unknown) => string | true;
 
 export function presence(message = "can't be blank"): Rule {
   return (v: unknown): string | true => {
@@ -205,7 +205,7 @@ export function or(rules: (Rule | Rule[])[], message?: string): Rule {
 
     const summary: string[] = [];
     for (const rs of rules) {
-      const res = multi(rs)(v);
+      const res = conjunctionOf(rs)(v);
       if (res === true) {
         return true;
       }
@@ -217,7 +217,7 @@ export function or(rules: (Rule | Rule[])[], message?: string): Rule {
 
 export function dig(field: string | string[], rule: Rule | Rule[]): Rule {
   const fields = isArray(field) ? field : [field];
-  const rules = multi(rule);
+  const rules = conjunctionOf(rule);
 
   return (v: unknown): string | true => {
     if (!isDefined(v) || !isObject(v)) {
