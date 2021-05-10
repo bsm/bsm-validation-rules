@@ -16,7 +16,6 @@ const tag = [
   vrb.presence(),
   vrb.typeOf('string'),
   vrb.length({ max: 20 }),
-  vrb.format(/^[A-Za-z0-9]+(\-[A-Za-z0-9])*$/),
 ];
 
 export const taskRules = {
@@ -43,11 +42,31 @@ export const taskRules = {
 
 In Vue/Vuetify:
 
-```html
+```vue
 <template>
-  <form>
-    <v-text-field label="Email" v-model="item.email" :rules="rules.email" />
-  </form>
+  <v-container fluid>
+    <v-row align="center">
+      <v-col cols="6">
+        <v-text-field
+          v-model="item.email"
+          label="Email"
+          :rules="rules.email"
+        ></v-text-field>
+      </v-col>
+
+      <v-col cols="6">
+        <v-select
+          v-model="item.state"
+          label="State"
+          :rules="rules.email"
+          :items="states"
+          item-text="state"
+          item-value="abbr"
+          return-object
+        ></v-select>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
@@ -59,12 +78,25 @@ const rules = {
     vrb.typeOf('string'),
     vrb.format(/\S+@\S+\.\S+/),
   ],
+  state: [
+    vrb.dig('abbr', [
+      vrb.presence(),
+      vrb.typeOf('string'),
+    ]),
+  ],
 };
 
 export default {
   data: () => ({
     rules,
     item: {},
+    states: [
+      { state: 'Florida', abbr: 'FL' },
+      { state: 'Georgia', abbr: 'GA' },
+      { state: 'Nebraska', abbr: 'NE' },
+      { state: 'California', abbr: 'CA' },
+      { state: 'New York', abbr: 'NY' },
+    ],
   }),
 }
 ```

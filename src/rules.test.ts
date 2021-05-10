@@ -7,6 +7,7 @@ import {
   typeOf,
   every,
   or,
+  dig,
   Rule,
 } from './rules';
 
@@ -24,6 +25,7 @@ describe('presence', () => {
     expect(subject(' ')).toEqual("can't be blank");
     expect(subject('\t')).toEqual("can't be blank");
     expect(subject([])).toEqual("can't be blank");
+    expect(subject({})).toEqual("can't be blank");
 
     expect(subject('foo')).toBe(true);
     expect(subject(123)).toBe(true);
@@ -31,6 +33,7 @@ describe('presence', () => {
     expect(subject(true)).toBe(true);
     expect(subject(false)).toBe(true);
     expect(subject([null])).toBe(true);
+    expect(subject({ key: 'value' })).toBe(true);
   });
 });
 
@@ -177,6 +180,50 @@ describe('typeOf', () => {
     expect(subject(true)).toEqual(`is not an integer`);
     expect(subject(false)).toEqual(`is not an integer`);
   });
+
+  it('should validate (boolean)', () => {
+    subject = typeOf('boolean');
+
+    expect(subject(undefined)).toBe(true);
+    expect(subject(null)).toBe(true);
+    expect(subject('')).toBe(true);
+    expect(subject(true)).toBe(true);
+    expect(subject(false)).toBe(true);
+
+    expect(subject(1)).toEqual(`is not a boolean`);
+    expect(subject('foo')).toEqual(`is not a boolean`);
+  });
+
+  it('should validate (array)', () => {
+    subject = typeOf('array');
+
+    expect(subject(undefined)).toBe(true);
+    expect(subject(null)).toBe(true);
+    expect(subject('')).toBe(true);
+    expect(subject([])).toBe(true);
+    expect(subject([1])).toBe(true);
+    expect(subject(['foo', 3])).toBe(true);
+
+    expect(subject(1.2)).toEqual(`is not an array`);
+    expect(subject('foo')).toEqual(`is not an array`);
+    expect(subject(true)).toEqual(`is not an array`);
+    expect(subject(false)).toEqual(`is not an array`);
+  });
+
+  it('should validate (object)', () => {
+    subject = typeOf('object');
+
+    expect(subject(undefined)).toBe(true);
+    expect(subject(null)).toBe(true);
+    expect(subject('')).toBe(true);
+    expect(subject({})).toBe(true);
+    expect(subject({ foo: 1 })).toBe(true);
+
+    expect(subject(1.2)).toEqual(`is not an object`);
+    expect(subject('foo')).toEqual(`is not an object`);
+    expect(subject(true)).toEqual(`is not an object`);
+    expect(subject(false)).toEqual(`is not an object`);
+  });
 });
 
 describe('every', () => {
@@ -214,10 +261,32 @@ describe('or', () => {
     expect(subject(true)).toBe(true);
     expect(subject(false)).toBe(true);
 
-    expect(subject(0)).toEqual('is invalid: is not a string, is not a boolean');
-    expect(subject([])).toEqual('is invalid: is not a string, is not a boolean');
+    expect(subject(0)).toEqual(`is invalid: is not a string, is not a boolean`);
+    expect(subject([])).toEqual(`is invalid: is not a string, is not a boolean`);
     expect(subject('zz')).toEqual(
-      'is invalid: is too short (minimum is 3 characters), is not a boolean',
+      `is invalid: is too short (minimum is 3 characters), is not a boolean`,
     );
+  });
+});
+
+describe('dig', () => {
+  let subject: Rule;
+
+  beforeEach(() => {
+    subject = dig(['nested', 'value'], [presence(), numericality({ min: 0 })]);
+  });
+
+  it('should validate', () => {
+    expect(subject(undefined)).toBe(true);
+    expect(subject(null)).toBe(true);
+    expect(subject('foo')).toBe(true);
+    expect(subject(true)).toBe(true);
+    expect(subject(false)).toBe(true);
+    expect(subject([])).toBe(true);
+    expect(subject({ nested: { value: 1 } })).toBe(true);
+
+    expect(subject({})).toEqual(`can't be blank`);
+    expect(subject({ nested: {} })).toEqual(`can't be blank`);
+    expect(subject({ nested: { value: -1 } })).toEqual(`must be greater or equal 0`);
   });
 });
