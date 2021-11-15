@@ -158,6 +158,9 @@ export function inclusion(values: unknown[], message = 'must be one of: {{values
 
 export function format(pattern: RegExp, message = 'is invalid'): Rule {
   return (v: unknown): string | true => {
+    if (isBlank(v)) {
+      return true;
+    }
     if (isString(v) && !pattern.test(v as string)) {
       return message;
     }
