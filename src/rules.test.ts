@@ -123,7 +123,7 @@ describe('format', () => {
     expect(subject('2020-02-20')).toBe(true);
     expect(subject('2020-02-20\n')).toEqual('is invalid');
     expect(subject('20-02-20')).toEqual('is invalid');
-    expect(subject('')).toEqual('is invalid');
+    expect(subject('')).toBe(true);
     expect(subject('foo')).toEqual('is invalid');
   });
 });
