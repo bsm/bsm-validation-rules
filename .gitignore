@@ -1,3 +1,7 @@
 node_modules/
 lib/
 *.log
+
+# Editor directories and files
+.idea
+.vscode
